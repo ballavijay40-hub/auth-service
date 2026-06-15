@@ -1,7 +1,16 @@
 package com.banking.microservices.authservice.dto;
 
+import lombok.*;
+
 import java.util.Set;
-public class AuthReposne {
+
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class AuthResponse {
+
     private String token;
 
 
