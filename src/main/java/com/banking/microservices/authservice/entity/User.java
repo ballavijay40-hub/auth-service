@@ -10,7 +10,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.FetchType;
-
+import lombok.*;
 
 
 import java.time.LocalDateTime;
@@ -19,6 +19,11 @@ import java.util.HashSet;
 
 @Entity
 @Table(name="users")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@Builder
 public class User {
 
     @Id
