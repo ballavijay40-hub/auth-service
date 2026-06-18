@@ -2,7 +2,8 @@ package com.banking.microservices.authservice.dto;
 
 import lombok.*;
 
-import java.util.Set;
+import java.util.List;
+
 
 @Builder
 @Getter
@@ -13,11 +14,11 @@ public class AuthResponse {
 
     private String token;
 
-
+    @Builder.Default
     private String type="Bearer";
 
     private String username;
 
-    private  Set<String> roles;
+    private List<String> roles;
 
 }

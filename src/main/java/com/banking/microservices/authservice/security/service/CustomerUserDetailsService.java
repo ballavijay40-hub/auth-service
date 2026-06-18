@@ -25,6 +25,8 @@ public class CustomerUserDetailsService implements UserDetailsService{
                 .orElseThrow(()->new UserAlreadyExistsException("user not found"+username));
 
 
+
+
         List<SimpleGrantedAuthority> authorities=
                 user.getRoles().stream().map(role->new SimpleGrantedAuthority(role.getName())).toList();
 
@@ -34,6 +36,7 @@ public class CustomerUserDetailsService implements UserDetailsService{
                 .authorities(authorities)
                 .build();
     }
+
 
 
 

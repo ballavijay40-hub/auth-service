@@ -7,14 +7,20 @@ import com.banking.microservices.authservice.entity.Role;
 import com.banking.microservices.authservice.entity.User;
 import com.banking.microservices.authservice.repository.RoleRepository;
 import com.banking.microservices.authservice.repository.UserRepository;
+import com.banking.microservices.authservice.security.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
 
 import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +28,8 @@ public class AuthServiceImpl implements AuthService{
     private final   UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+    private  final JwtService jwtService;
 
 
     @Override
@@ -61,8 +69,7 @@ public class AuthServiceImpl implements AuthService{
                 .roles(
                         user.getRoles().stream()
                                 .map(Role::getName)
-                                .collect(Collectors.toSet())
-
+                                .toList()
                 )
                 .build();
 
@@ -75,20 +82,35 @@ public class AuthServiceImpl implements AuthService{
 
     @Override
     public AuthResponse login(LoginRequest req){
-        User user=userRepository.findByUsername(req.getName())
-                .orElseThrow(()->new RuntimeException("Inavalid uername or password."));
+        Authentication authentication=authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(req.getUsername(),req.getPassword())
 
-        if(!passwordEncoder.matches(req.getPassword(), user.getPassword())){
-            throw new RuntimeException("Invalid username or password.");
+        );
+
+        //if no exception goes below
+
+        UserDetails userDetails=(UserDetails) authentication.getPrincipal();
+
+        Map<String,Object> claims=new HashMap<>();
+        if(userDetails.getAuthorities()!=null) {
+            claims.put("roles", userDetails.getAuthorities()
+                    .stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .toList()
+
+            );
+        }
+        else{
+            claims.put("roles",new ArrayList<>());
+
         }
 
-        return AuthResponse.builder()
-
-                .username(user.getUsername())
-                .roles(
-                        user.getRoles().stream().map(Role::getName).collect(Collectors.toSet())
-                )
-                .build();
+       String token=jwtService.generateToken(userDetails.getUsername(),claims);
+       return AuthResponse.builder()
+               .token(token)
+               .username(userDetails.getUsername())
+               .roles(userDetails.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList())
+               .build();
     }
 
     @Override
